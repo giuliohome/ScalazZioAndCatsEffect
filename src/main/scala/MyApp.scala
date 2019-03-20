@@ -1,3 +1,4 @@
+import cats.effect.ExitCode
 import catsEffectTutorial.CopyFile
 import scalaz.zio.App
 import scalaz.zio.console._
@@ -32,7 +33,8 @@ object MyApp extends App {
       _ <-  s1.flatMap(i => putStrLn(s"start s1={$i}"))
       _ <- putStrLn("ciao")
       app : cats.effect.IOApp = CopyFile
-      _ <- IO( app.run(args).unsafeRunSync())
+      exit <- IO( app.run(args).unsafeRunSync())
+      _ <- IO(if (exit == ExitCode.Error) throw new Exception("CopyFile failed!"))
       _ <-  zOK.flatMap(i => putStrLn(s"end zOK={$i}"))
       _ <- putStr(s"end s1=${s1Value}\n")
     } yield  ()

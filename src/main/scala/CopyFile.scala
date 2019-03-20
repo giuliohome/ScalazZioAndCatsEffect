@@ -59,8 +59,28 @@ object CopyFile extends IOApp {
       else IO.unit
       orig = new File(args(0))
       dest = new File(args(1))
-      count <- copy(orig, dest)
-      _     <- IO(println(s"$count bytes copied from ${orig.getPath} to ${dest.getPath}"))
-    } yield ExitCode.Success
+      countMaybe : Either[Exception, Long  ] =
+        try { Right(copy(orig, dest).unsafeRunSync()  )}
+        catch {
+          case e: Exception  => Left(e)
+        }
+      resIO : IO[Boolean]  =
+        countMaybe match {
+            case Right(count) =>
+              IO({
+                println(s"$count bytes copied from ${orig.getPath} to ${dest.getPath}")
+                true }
+              )
+            case Left(e) =>
+              IO({
+                println(s"Exception ${e.toString()}")
+                false }
+              )
+          }
+      res <- resIO
+    } yield
+        if (res) ExitCode.Success
+        else ExitCode.Error
+
 
 }
